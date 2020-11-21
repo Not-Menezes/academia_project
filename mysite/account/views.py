@@ -9,6 +9,9 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .forms import CreateUserForm
 
+def home(request):
+    return render(request, 'accounts/home.html')
+
 def registerPage(request):
     if request.user.is_authenticated:
         return redirect('login')
