@@ -1,0 +1,37 @@
+{%  extends 'accounts/main_professor_page.html' %}
+{% load static %}
+{% block content %}
+
+<div class="col-md-7">
+		<h5>CLASSES</h5>
+		<hr>
+		<div class="card card-body">
+			<a class="btn btn-primary  btn-sm btn-block" href="{% url 'create_class' %}">Create Class</a>
+			<table class="table table-sm">
+				<tr>
+					<th>Class</th>
+					<th>StartDate</th>
+					<th>EndDate</th>
+					<th>Update</th>
+					<th>Remove</th>
+				</tr>
+
+				{% for class in classes %}
+					<tr>
+						<td>{{class.class_name}}</td>
+						<td>{{class.start_date}}</td>
+						<td>{{class.end_date}}</td>
+						<td><a class="btn btn-sm btn-info" href="{% url 'update_class' class.id %}">Update</a></td>
+
+						<td><a class="btn btn-sm btn-danger" href="{% url 'create_class'  %}">Delete</a></td>
+
+					</tr>
+				{% endfor %}
+
+
+			</table>
+		</div>
+	</div>
+
+
+{% endblock %}

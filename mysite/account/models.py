@@ -29,7 +29,6 @@ class MyAccountManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-
 class Account(AbstractBaseUser):
     email        = models.EmailField(verbose_name="email", max_length=60, unique=True)
     username     = models.CharField(max_length=30, unique=True)
@@ -38,15 +37,14 @@ class Account(AbstractBaseUser):
     is_admin     = models.BooleanField(default=False)
     is_active    = models.BooleanField(default=True)
     is_staff     = models.BooleanField(default=False)
-    is_student   = models.BooleanField(default=False)
     function     = models.CharField(
         choices=(
-            ('S','Student'),
-            ('P','Professor'),
+            ('Student','Student'),
+            ('Professor','Professor'),
         ),
-        max_length=1,
+        max_length=20,
         verbose_name='Function',
-        default='S'
+        default='Student'
     )
 
     USERNAME_FIELD = 'email'
@@ -62,3 +60,13 @@ class Account(AbstractBaseUser):
 
     def has_module_perms(self, app_label):
         return True
+
+class Class(models.Model):
+
+    user = models.ForeignKey(Account, verbose_name="user", null=True, on_delete=models.SET_NULL)
+    class_name = models.CharField(max_length=200, null=True)
+    start_date = models.DateTimeField(null=True)
+    end_date = models.DateTimeField(null=True)
+
+    def __str__(self):
+        return '%s ---- %s' % (self.user, self.class_name)
