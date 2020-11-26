@@ -1,0 +1,75 @@
+{%  extends 'accounts/main_student_page.html' %}
+{% load static %}
+{% block content %}
+
+<br>
+
+<div class="row">
+	<div class="col-md-5">
+		<h5>CLASSES:</h5>
+		<hr>
+		<div class="card card-body">
+			<table class="table table-sm">
+				<tr>
+					<th>ProfessorName</th>
+					<th>ClassName</th>
+					<th>StartDate</th>
+					<th>EndDate</th>
+					<th>Register in Class</th>
+				</tr>
+
+				{% for class in classes %}
+					<tr>
+						<td>{{class.user.username}}</td>
+						<td>{{class.class_name}}</td>
+						<td>{{class.start_date}}</td>
+						<td>{{class.end_date}}</td>
+						<td>
+							<form method="post" action="{% url 'add_class' class.id %}">
+								{% csrf_token %}
+								<button type='submit'> Register in Class</button>
+							</form>
+						</td>
+
+					</tr>
+				{% endfor %}
+
+			</table>
+		</div>
+	</div>
+
+	<div class="col-md-7">
+		<h5>REGISTRATIONS</h5>
+		<hr>
+		<div class="card card-body">
+			
+			<table class="table table-sm">
+				<tr>
+					<th>ProfessorName</th>
+					<th>ClassName</th>
+					<th>StartDate</th>
+					<th>EndDate</th>
+					<th>Remove Class</th>
+				</tr>
+
+				{% for registration in registrations %}
+					<tr>
+						<td>{{registration.course.user.username}}</td>
+						<td>{{registration.course.class_name}}</td>
+						<td>{{registration.course.start_date}}</td>
+						<td>{{registration.course.end_date}}</td>
+
+						<td><a class="btn btn-sm btn-danger" href="{% url 'remove_class' registration.id %}">Remove Class</a></td>
+
+					</tr>
+				{% endfor %}
+
+		
+			</table>
+		</div>
+	</div>
+
+</div>
+
+{% endblock %}
+

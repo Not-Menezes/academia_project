@@ -70,3 +70,12 @@ class Class(models.Model):
 
     def __str__(self):
         return '%s ---- %s' % (self.user, self.class_name)
+
+class Registration(models.Model):
+
+    user = models.ForeignKey(Account, verbose_name="user", null=True, on_delete=models.SET_NULL)
+    course = models.ForeignKey(Class, verbose_name="course", null=True, on_delete=models.SET_NULL)
+    start_date = models.DateTimeField(verbose_name='date joined', auto_now_add=True)
+
+    def __str__(self):
+        return '%s ---- %s' % (self.user, self.course)

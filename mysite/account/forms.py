@@ -4,11 +4,16 @@ from django.contrib.admin.widgets import AdminSplitDateTime
 from django.forms import ModelForm, DateTimeField, DateField, DateInput
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Account, Class
+from .models import Account, Class , Registration
 from django import forms
 from django.contrib.admin import widgets
 DateInput = partial(forms.DateInput, {'class': 'form-control datetimepicker-input'})
 
+
+class RegistrationForm(ModelForm):
+	class Meta:
+		model = Registration
+		exclude = ['user', 'course']
 
 class ClassForm(ModelForm):
 	class Meta:

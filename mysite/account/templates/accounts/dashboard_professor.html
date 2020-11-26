@@ -23,7 +23,7 @@
 						<td>{{class.end_date}}</td>
 						<td><a class="btn btn-sm btn-info" href="{% url 'update_class' class.id %}">Update</a></td>
 
-						<td><a class="btn btn-sm btn-danger" href="{% url 'create_class'  %}">Delete</a></td>
+						<td><a class="btn btn-sm btn-danger" href="{% url 'delete_class' class.id %}">Delete</a></td>
 
 					</tr>
 				{% endfor %}
