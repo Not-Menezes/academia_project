@@ -7,9 +7,11 @@ from django.contrib.auth import authenticate, login, logout
 
 from django.contrib import messages
 
+from django.contrib.auth.models import Group
 from django.contrib.auth.decorators import login_required
 from .forms import CreateUserForm, ClassForm, RegistrationForm
-from .models import Account, Class, Registration
+from .models import Class, Registration
+from .decorators import unauthenticated_user, student_only, professor_and_admin_only, allowed_users
 
 
 def registerPage(request):
@@ -20,9 +22,19 @@ def registerPage(request):
         if request.method == 'POST':
             form = CreateUserForm(request.POST)
             if form.is_valid():
-                form.save()
-                user = form.cleaned_data.get('username')
-                messages.success(request, 'Account was created for ' + user)
+                function = form.cleaned_data.get('function')
+                user = form.save()
+                username = form.cleaned_data.get('username')
+
+                if function == "Professor":
+                    group, created = Group.objects.get_or_create(name='professor')
+                elif function == "Student":
+                    group, created = Group.objects.get_or_create(name='student')
+
+                user.groups.add(group)
+
+
+                messages.success(request, 'Account was created for ' + username)
 
                 return redirect('login')
 
@@ -39,11 +51,15 @@ def loginPage(request):
             password = request.POST.get('password')
 
             user = authenticate(request, username=username, password=password)
+            print(user)
             if user is not None:
                 login(request, user)
-                if user.function == "Professor":
+                group = None
+                if request.user.groups.exists():
+                    group = request.user.groups.all()[0].name
+                if group == "professor":
                     return redirect('dashboard_professor')
-                elif user.function == "Student":
+                elif group == "student":
                     return redirect('dashboard_student')
             else:
                 messages.info(request, 'Username OR password is incorrect')
@@ -53,11 +69,6 @@ def loginPage(request):
 
 @login_required(login_url='login')
 def home(request):
-    if request.user.is_authenticated:
-        if request.user.function == "Professor":
-            return redirect('dashboard_professor')
-        elif request.user.function == "Student":
-            return redirect('dashboard_student')
     return render(request, 'accounts/home.html')
 
 def logoutUser(request):
@@ -65,20 +76,16 @@ def logoutUser(request):
 	return redirect('login')
 
 @login_required(login_url='login')
+@professor_and_admin_only
 def dashboard_professor(request):
-    if request.user.is_authenticated:
-        if request.user.function == "Student":
-            return redirect('dashboard_student')
     classes = Class.objects.filter(user=request.user)
 
     context = {'classes': classes}
     return render(request, 'accounts/dashboard_professor.html', context)
 
 @login_required(login_url='login')
+@student_only
 def dashboard_student(request):
-    if request.user.is_authenticated:
-        if request.user.function == "Professor":
-            return redirect('dashboard_professor')
     classes = Class.objects.all()
     registrations = Registration.objects.filter(user=request.user)
     print(request.user)
@@ -88,6 +95,7 @@ def dashboard_student(request):
     return render(request, 'accounts/dashboard_student.html', context)
 
 @login_required(login_url='login')
+@allowed_users(allowed_roles=['student'])
 def add_class(request, pk):
     form = RegistrationForm()
     if request.method == 'POST':
@@ -114,15 +122,20 @@ def add_class(request, pk):
     return render(request, 'accounts/dashboard_student.html', context)
 
 @login_required(login_url='login')
+@allowed_users(allowed_roles=['student'])
 def remove_class(request, pk):
-    classes = Class.objects.all()
-    registrations = Registration.objects.filter(user=request.user)
+    print(pk)
+    registration = Registration.objects.get(id=pk)
+    print(registration)
+    if request.method == "POST":
+        registration.delete()
+        return redirect('dashboard_student')
+    context = {'item': registration}
+    print("Oi")
+    return render(request, 'accounts/delete_student_class.html', context)
 
-    context = {'classes': classes , "registrations" : registrations}
-
-    return render(request, 'accounts/dashboard_student.html', context)
-
-
+@login_required(login_url='login')
+@allowed_users(allowed_roles=['professor'])
 def create_class(request):
     form = ClassForm()
     if request.method == 'POST':
@@ -143,6 +156,8 @@ def create_class(request):
     context = {'form': form}
     return render(request, 'accounts/create_class.html', context)
 
+@login_required(login_url='login')
+@allowed_users(allowed_roles=['professor'])
 def update_class(request, pk):
     classObj = Class.objects.get(id=pk)
     classForm = ClassForm(instance=classObj)
@@ -162,12 +177,13 @@ def update_class(request, pk):
     return render(request, 'accounts/create_class.html', context)
 
 @login_required(login_url='login')
+@allowed_users(allowed_roles=['professor'])
 def delete_class(request, pk):
     order = Class.objects.get(id=pk)
     print(order)
     if request.method == "POST":
         order.delete()
-        return redirect('/')
+        return redirect('dashboard_professor')
 
     context = {'item':order}
-    return render(request, 'accounts/delete.html', context)
+    return render(request, 'accounts/delete_professor_class.html', context)
