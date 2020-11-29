@@ -112,7 +112,7 @@ def add_class(request, pk):
                 form.course = class_obj
                 form.save()
             else:
-                print("Not possible to add")
+                messages.info(request, 'Choque de horário da aula "'+class_obj.class_name+'" de horário inicial '+str(start_date)+' e horário final '+ str(end_date)+' !')
             return redirect('dashboard_student')
     context = {}
     return render(request, 'accounts/dashboard_student.html', context)
@@ -142,7 +142,7 @@ def validate_class_date(start_date, end_date, request):
     result, start_date , end_date = dates_valid(start_date, end_date)
     success = True
     if not result:
-        messages.info(request, 'Formato de datas inválido! Por Favor, escreva no formato (YYYY-MM-DD HH-MM-SS)')
+        messages.info(request, 'Formato de datas inválido! Por Favor, escreva no formato (YYYY-MM-DD HH:MM:SS)')
         success = False
         return result
     if start_date >= end_date:
