@@ -12,7 +12,7 @@ from django.contrib.auth.decorators import login_required
 from .forms import CreateUserForm, ClassForm, RegistrationForm
 from .models import Class, Registration
 from .decorators import unauthenticated_user, student_only, professor_and_admin_only, allowed_users
-
+import datetime
 
 def registerPage(request):
     if request.user.is_authenticated:
@@ -86,7 +86,7 @@ def dashboard_professor(request):
 @login_required(login_url='login')
 @student_only
 def dashboard_student(request):
-    classes = Class.objects.all()
+    classes = Class.objects.filter(user__groups__name='professor')
     registrations = Registration.objects.filter(user=request.user)
     print(request.user)
     print(registrations)
@@ -101,25 +101,29 @@ def add_class(request, pk):
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
         class_obj = Class.objects.get(id=pk)
-        registration = Registration.objects.filter(course=class_obj)
-        print(class_obj.class_name)
-        print(class_obj.user)
-        print(class_obj.start_date)
-        print(class_obj.end_date)
-        print(class_obj)
-        print(form)
+        start_date = class_obj.start_date
+        end_date = class_obj.end_date
+        registration = Registration.objects.filter(Q(course=class_obj) | (~Q(course=class_obj) & (Q(course__start_date__range=[start_date, end_date]) | Q(course__end_date__range=[start_date, end_date])) & (Q(course__start_date__lte=start_date) | Q(course__end_date__gte=end_date))))
+        print(registration)
         if form.is_valid():
             if len(registration) == 0:
                 form = form.save(commit=False)
                 form.user = request.user
                 form.course = class_obj
-                print(form)
                 form.save()
             else:
                 print("Not possible to add")
             return redirect('dashboard_student')
     context = {}
     return render(request, 'accounts/dashboard_student.html', context)
+
+def dates_valid(start_date, end_date):
+    try:
+        start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d %H:%M:%S')
+        end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d %H:%M:%S')
+        return True , start_date, end_date
+    except ValueError:
+        return False , "" , ""
 
 @login_required(login_url='login')
 @allowed_users(allowed_roles=['student'])
@@ -134,6 +138,18 @@ def remove_class(request, pk):
     print("Oi")
     return render(request, 'accounts/delete_student_class.html', context)
 
+def validate_class_date(start_date, end_date, request):
+    result, start_date , end_date = dates_valid(start_date, end_date)
+    success = True
+    if not result:
+        messages.info(request, 'Formato de datas inválido! Por Favor, escreva no formato (YYYY-MM-DD HH-MM-SS)')
+        success = False
+        return result
+    if start_date >= end_date:
+        messages.info(request, 'Data de Início deve ser Menor que a Data Final!')
+        success = False
+    return success
+
 @login_required(login_url='login')
 @allowed_users(allowed_roles=['professor'])
 def create_class(request):
@@ -142,16 +158,17 @@ def create_class(request):
         form = ClassForm(request.POST)
         start_date = form.data['start_date']
         end_date = form.data['end_date']
-        print(start_date)
-        classes = Class.objects.filter(Q(user=request.user) & (Q(start_date__range=[start_date, end_date]) | Q(end_date__range=[start_date, end_date])) & (Q(start_date__lte=start_date) | Q(end_date__gte=end_date)))
-        print(classes)
-        if form.is_valid() and len(classes) == 0:
-            form = form.save(commit=False)
-            form.user = request.user
-            form.save()
-            return redirect('dashboard_professor')
-        else:
-            messages.info(request, 'This class time is already taken!')
+        if validate_class_date(start_date,end_date,request):
+            print(start_date)
+            classes = Class.objects.filter(Q(user=request.user) & (Q(start_date__range=[start_date, end_date]) | Q(end_date__range=[start_date, end_date])) & (Q(start_date__lte=start_date) | Q(end_date__gte=end_date)))
+            print(classes)
+            if form.is_valid() and len(classes) == 0:
+                form = form.save(commit=False)
+                form.user = request.user
+                form.save()
+                return redirect('dashboard_professor')
+            else:
+                messages.info(request, 'Esse horário de aula já está preenchido!')
 
     context = {'form': form}
     return render(request, 'accounts/create_class.html', context)
@@ -165,13 +182,14 @@ def update_class(request, pk):
         classForm = ClassForm(request.POST, instance=classObj)
         start_date = classForm.data['start_date']
         end_date = classForm.data['end_date']
-        classes = Class.objects.filter(~Q(id=pk) & Q(user=request.user) & (Q(start_date__range=[start_date, end_date]) | Q(end_date__range=[start_date, end_date])) & (Q(start_date__lte=start_date) | Q(end_date__gte=end_date)))
-        print(classes)
-        if classForm.is_valid() and len(classes) == 0:
-            classForm.save()
-            return redirect('dashboard_professor')
-        else:
-            messages.info(request, 'This class time is already taken!')
+        if validate_class_date(start_date, end_date, request):
+            classes = Class.objects.filter(~Q(id=pk) & Q(user=request.user) & (Q(start_date__range=[start_date, end_date]) | Q(end_date__range=[start_date, end_date])) & (Q(start_date__lte=start_date) | Q(end_date__gte=end_date)))
+            print(classes)
+            if classForm.is_valid() and len(classes) == 0:
+                classForm.save()
+                return redirect('dashboard_professor')
+            else:
+                messages.info(request, 'This class time is already taken!')
 
     context = {'form':classForm}
     return render(request, 'accounts/create_class.html', context)

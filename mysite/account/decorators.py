@@ -6,7 +6,6 @@ def unauthenticated_user(view_func):
         if request.user.is_authenticated:
             group = None
             if request.user.groups.exists():
-                print("hi")
                 group = request.user.groups.all()[0].name
                 if group == "professor":
                     return redirect('dashboard_professor')
@@ -48,7 +47,6 @@ def professor_and_admin_only(view_func):
         group = None
         if request.user.groups.exists():
             group = request.user.groups.all()[0].name
-            print(group)
             if group == 'student':
                 return redirect('dashboard_student')
             else:
