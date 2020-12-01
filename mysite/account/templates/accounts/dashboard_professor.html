@@ -3,17 +3,17 @@
 {% block content %}
 
 <div class="col-md-7">
-		<h5>CLASSES</h5>
+		<h5>Suas Aulas</h5>
 		<hr>
 		<div class="card card-body">
-			<a class="btn btn-primary  btn-sm btn-block" href="{% url 'create_class' %}">Create Class</a>
+			<a class="btn btn-primary  btn-sm btn-block" href="{% url 'create_class' %}">Crie uma aula</a>
 			<table class="table table-sm">
 				<tr>
-					<th>Class</th>
-					<th>StartDate</th>
-					<th>EndDate</th>
-					<th>Update</th>
-					<th>Remove</th>
+					<th>Aula</th>
+					<th>Data de Início</th>
+					<th>Data de Fim</th>
+					<th>Atualize</th>
+					<th>Remova</th>
 				</tr>
 
 				{% for class in classes %}

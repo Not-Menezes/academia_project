@@ -64,7 +64,7 @@ def loginPage(request):
                 elif group == "student":
                     return redirect('dashboard_student')
             else:
-                messages.info(request, 'Username OR password is incorrect')
+                messages.info(request, 'Login ou senha incorreto(s)!')
 
         context = {}
         return render(request, 'accounts/login.html', context)
@@ -188,7 +188,7 @@ def update_class(request, pk):
                 classForm.save()
                 return redirect('dashboard_professor')
             else:
-                messages.info(request, 'This class time is already taken!')
+                messages.info(request, 'Voce já possui uma aula criada durante este horário!')
 
     context = {'form':classForm}
     return render(request, 'accounts/create_class.html', context)
