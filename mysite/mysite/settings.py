@@ -24,9 +24,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'n1c9)n!qwyc=(6@mp(_71sdpo5yjhm8r194kojx2n74!)zyhkd'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['project-academic-web.herokuapp.com', 'localhost:8080']
 
 
 # Application definition
