@@ -51,12 +51,14 @@ def loginPage(request):
             password = request.POST.get('password')
 
             user = authenticate(request, username=username, password=password)
-            print(user)
             if user is not None:
                 login(request, user)
                 group = None
                 if request.user.groups.exists():
                     group = request.user.groups.all()[0].name
+                elif request.user.is_superuser and not request.user.groups.exists():
+                    group , created = Group.objects.get_or_create(name='professor')
+                    request.user.groups.add(group)
                 if group == "professor":
                     return redirect('dashboard_professor')
                 elif group == "student":
@@ -68,6 +70,8 @@ def loginPage(request):
         return render(request, 'accounts/login.html', context)
 
 @login_required(login_url='login')
+@professor_and_admin_only
+@student_only
 def home(request):
     return render(request, 'accounts/home.html')
 
@@ -88,8 +92,6 @@ def dashboard_professor(request):
 def dashboard_student(request):
     classes = Class.objects.filter(user__groups__name='professor')
     registrations = Registration.objects.filter(user=request.user)
-    print(request.user)
-    print(registrations)
     context = {'classes': classes , "registrations" : registrations}
 
     return render(request, 'accounts/dashboard_student.html', context)
@@ -104,7 +106,6 @@ def add_class(request, pk):
         start_date = class_obj.start_date
         end_date = class_obj.end_date
         registration = Registration.objects.filter(Q(course=class_obj) | (~Q(course=class_obj) & (Q(course__start_date__range=[start_date, end_date]) | Q(course__end_date__range=[start_date, end_date])) & (Q(course__start_date__lte=start_date) | Q(course__end_date__gte=end_date))))
-        print(registration)
         if form.is_valid():
             if len(registration) == 0:
                 form = form.save(commit=False)
@@ -128,14 +129,13 @@ def dates_valid(start_date, end_date):
 @login_required(login_url='login')
 @allowed_users(allowed_roles=['student'])
 def remove_class(request, pk):
-    print(pk)
     registration = Registration.objects.get(id=pk)
-    print(registration)
+    if registration.user != request.user:
+        return redirect('dashboard_student')
     if request.method == "POST":
         registration.delete()
         return redirect('dashboard_student')
     context = {'item': registration}
-    print("Oi")
     return render(request, 'accounts/delete_student_class.html', context)
 
 def validate_class_date(start_date, end_date, request):
@@ -159,9 +159,7 @@ def create_class(request):
         start_date = form.data['start_date']
         end_date = form.data['end_date']
         if validate_class_date(start_date,end_date,request):
-            print(start_date)
             classes = Class.objects.filter(Q(user=request.user) & (Q(start_date__range=[start_date, end_date]) | Q(end_date__range=[start_date, end_date])) & (Q(start_date__lte=start_date) | Q(end_date__gte=end_date)))
-            print(classes)
             if form.is_valid() and len(classes) == 0:
                 form = form.save(commit=False)
                 form.user = request.user
@@ -177,6 +175,8 @@ def create_class(request):
 @allowed_users(allowed_roles=['professor'])
 def update_class(request, pk):
     classObj = Class.objects.get(id=pk)
+    if classObj.user != request.user:
+        return redirect('dashboard_professor')
     classForm = ClassForm(instance=classObj)
     if request.method == 'POST':
         classForm = ClassForm(request.POST, instance=classObj)
@@ -184,7 +184,6 @@ def update_class(request, pk):
         end_date = classForm.data['end_date']
         if validate_class_date(start_date, end_date, request):
             classes = Class.objects.filter(~Q(id=pk) & Q(user=request.user) & (Q(start_date__range=[start_date, end_date]) | Q(end_date__range=[start_date, end_date])) & (Q(start_date__lte=start_date) | Q(end_date__gte=end_date)))
-            print(classes)
             if classForm.is_valid() and len(classes) == 0:
                 classForm.save()
                 return redirect('dashboard_professor')
@@ -197,11 +196,12 @@ def update_class(request, pk):
 @login_required(login_url='login')
 @allowed_users(allowed_roles=['professor'])
 def delete_class(request, pk):
-    order = Class.objects.get(id=pk)
-    print(order)
+    classObj = Class.objects.get(id=pk)
+    if classObj.user != request.user:
+        return redirect('dashboard_professor')
     if request.method == "POST":
-        order.delete()
+        classObj.delete()
         return redirect('dashboard_professor')
 
-    context = {'item':order}
+    context = {'item':classObj}
     return render(request, 'accounts/delete_professor_class.html', context)
