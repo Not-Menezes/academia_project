@@ -12,8 +12,8 @@
 					<th>Aula</th>
 					<th>Data de Início</th>
 					<th>Data de Fim</th>
-					<th>Atualize</th>
-					<th>Remova</th>
+					<th>Atualização</th>
+					<th>Remoção</th>
 				</tr>
 
 				{% for class in classes %}
@@ -21,9 +21,9 @@
 						<td>{{class.class_name}}</td>
 						<td>{{class.start_date}}</td>
 						<td>{{class.end_date}}</td>
-						<td><a class="btn btn-sm btn-info" href="{% url 'update_class' class.id %}">Update</a></td>
+						<td><a class="btn btn-sm btn-info" href="{% url 'update_class' class.id %}">Atualizar</a></td>
 
-						<td><a class="btn btn-sm btn-danger" href="{% url 'delete_class' class.id %}">Delete</a></td>
+						<td><a class="btn btn-sm btn-danger" href="{% url 'delete_class' class.id %}">Deletar Aula</a></td>
 
 					</tr>
 				{% endfor %}
