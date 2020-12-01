@@ -13,7 +13,6 @@ constantly==15.1.0
 cryptography==2.8
 dbus-python==1.2.16
 distro==1.4.0
-distro-info===0.23ubuntu1
 Django==3.1.2
 django-filter==2.4.0
 django-storages==1.10.1
