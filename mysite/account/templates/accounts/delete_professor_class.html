@@ -8,14 +8,14 @@
 		<div class="card card-body">
 
 
-			<p>Are you sure you want to delete "{{item.class_name}}" of {{item.start_date}} to {{item.end_date}}?</p>
+			<p>Você tem certeza que deseja deletar a aula "{{item.class_name}}" que ocorrerá de {{item.start_date}} até {{item.end_date}}?</p>
 
 			<form action="{% url 'delete_class' item.id  %}" method="POST">
 				
 				{% csrf_token %}
-				<a class="btn btn-warning" href="{% url 'dashboard_professor' %}">Cancel</a>
+				<a class="btn btn-warning" href="{% url 'dashboard_professor' %}">Cancelar</a>
 
-				<input class="btn btn-danger" type="submit" name="Confirm">
+				<input class="btn btn-danger" type="submit" value="Confirmar" name="Confirm">
 			</form>
 		</div>
 	</div>
