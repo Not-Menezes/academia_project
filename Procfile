@@ -1,1 +1,1 @@
-web: gunicorn academia_project.mysite.mysite.wsgi --log-file -
+web: gunicorn mysite.wsgi --log-file -
