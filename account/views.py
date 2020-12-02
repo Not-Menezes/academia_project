@@ -1,3 +1,4 @@
+import pytz
 from django.db.models import Q
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseRedirect
@@ -12,7 +13,8 @@ from django.contrib.auth.decorators import login_required
 from .forms import CreateUserForm, ClassForm, RegistrationForm
 from .models import Class, Registration
 from .decorators import unauthenticated_user, student_only, professor_and_admin_only, allowed_users
-import datetime
+from datetime import datetime, timedelta
+
 
 def registerPage(request):
     if request.user.is_authenticated:
@@ -120,8 +122,8 @@ def add_class(request, pk):
 
 def dates_valid(start_date, end_date):
     try:
-        start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d %H:%M:%S')
-        end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d %H:%M:%S')
+        start_date = datetime.strptime(start_date, '%Y-%m-%d %H:%M:%S')
+        end_date = datetime.strptime(end_date, '%Y-%m-%d %H:%M:%S')
         return True , start_date, end_date
     except ValueError:
         return False , "" , ""
@@ -145,6 +147,13 @@ def validate_class_date(start_date, end_date, request):
         messages.info(request, 'Formato de datas inválido! Por Favor, escreva no formato (YYYY-MM-DD HH:MM:SS)')
         success = False
         return result
+    now = datetime.now() - timedelta(hours=3)
+    if start_date < now:
+        messages.info(request, 'Data de início deve ser maior que a data de hoje!')
+        success = False
+    if end_date < now:
+        messages.info(request, 'Data de fim deve ser maior que a data de hoje!')
+        success = False
     if start_date >= end_date:
         messages.info(request, 'Data de Início deve ser Menor que a Data Final!')
         success = False
