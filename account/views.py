@@ -93,7 +93,8 @@ def dashboard_professor(request):
 @student_only
 def dashboard_student(request):
     classes = Class.objects.filter(user__groups__name='professor')
-    registrations = Registration.objects.filter(user=request.user)
+    now = datetime.now() - timedelta(hours=3)
+    registrations = Registration.objects.filter(Q(user=request.user) & Q(course__start_date__gte=now))
     context = {'classes': classes , "registrations" : registrations}
 
     return render(request, 'accounts/dashboard_student.html', context)
@@ -107,16 +108,21 @@ def add_class(request, pk):
         class_obj = Class.objects.get(id=pk)
         start_date = class_obj.start_date
         end_date = class_obj.end_date
-        registration = Registration.objects.filter(Q(user=request.user) & (Q(course=class_obj) | (~Q(course=class_obj) & (Q(course__start_date__range=[start_date, end_date]) | Q(course__end_date__range=[start_date, end_date])) & (Q(course__start_date__lte=start_date) | Q(course__end_date__gte=end_date)))))
-        if form.is_valid():
-            if len(registration) == 0:
-                form = form.save(commit=False)
-                form.user = request.user
-                form.course = class_obj
-                form.save()
-            else:
-                messages.info(request, 'Choque de horário da aula "'+class_obj.class_name+'" de horário inicial '+str(start_date)+' e horário final '+ str(end_date)+' !')
+        now = datetime.now() - timedelta(hours=3)
+        if start_date < now:
+            messages.info(request, 'Esta aula não está mais disponível!')
             return redirect('dashboard_student')
+        else:
+            registration = Registration.objects.filter(Q(user=request.user) & (Q(course=class_obj) | (~Q(course=class_obj) & (Q(course__start_date__range=[start_date, end_date]) | Q(course__end_date__range=[start_date, end_date])) & (Q(course__start_date__lte=start_date) | Q(course__end_date__gte=end_date)))))
+            if form.is_valid():
+                if len(registration) == 0:
+                    form = form.save(commit=False)
+                    form.user = request.user
+                    form.course = class_obj
+                    form.save()
+                else:
+                    messages.info(request, 'Choque de horário da aula "'+class_obj.class_name+'" de horário inicial '+str(start_date)+' e horário final '+ str(end_date)+' !')
+                return redirect('dashboard_student')
     context = {}
     return render(request, 'accounts/dashboard_student.html', context)
 
