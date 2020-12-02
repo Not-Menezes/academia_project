@@ -92,9 +92,10 @@ def dashboard_professor(request):
 @login_required(login_url='login')
 @student_only
 def dashboard_student(request):
-    classes = Class.objects.filter(user__groups__name='professor')
     now = datetime.now() - timedelta(hours=3)
-    registrations = Registration.objects.filter(Q(user=request.user) & Q(course__start_date__gte=now))
+    now = now.replace(tzinfo=pytz.UTC)
+    classes = Class.objects.filter(Q(user__groups__name='professor') & Q(start_date__gte=now))
+    registrations = Registration.objects.filter(user=request.user)
     context = {'classes': classes , "registrations" : registrations}
 
     return render(request, 'accounts/dashboard_student.html', context)
@@ -109,6 +110,7 @@ def add_class(request, pk):
         start_date = class_obj.start_date
         end_date = class_obj.end_date
         now = datetime.now() - timedelta(hours=3)
+        now = now.replace(tzinfo=pytz.UTC)
         if start_date < now:
             messages.info(request, 'Esta aula não está mais disponível!')
             return redirect('dashboard_student')
