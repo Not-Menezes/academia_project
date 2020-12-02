@@ -33,14 +33,13 @@ ALLOWED_HOSTS = ['project-academic-web.herokuapp.com', 'localhost:8080']
 
 INSTALLED_APPS = [
 
-    'account',
-
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'account.apps.AccountConfig',
 ]
 
 MIDDLEWARE = [
@@ -54,6 +53,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'account.middleware.OneSessionPerUserMiddleware'
 ]
 
 ROOT_URLCONF = 'mysite.urls'
