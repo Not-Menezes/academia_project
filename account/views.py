@@ -105,7 +105,7 @@ def add_class(request, pk):
         class_obj = Class.objects.get(id=pk)
         start_date = class_obj.start_date
         end_date = class_obj.end_date
-        registration = Registration.objects.filter(Q(course=class_obj) | (~Q(course=class_obj) & (Q(course__start_date__range=[start_date, end_date]) | Q(course__end_date__range=[start_date, end_date])) & (Q(course__start_date__lte=start_date) | Q(course__end_date__gte=end_date))))
+        registration = Registration.objects.filter(Q(user=request.user) & (Q(course=class_obj) | (~Q(course=class_obj) & (Q(course__start_date__range=[start_date, end_date]) | Q(course__end_date__range=[start_date, end_date])) & (Q(course__start_date__lte=start_date) | Q(course__end_date__gte=end_date)))))
         if form.is_valid():
             if len(registration) == 0:
                 form = form.save(commit=False)
