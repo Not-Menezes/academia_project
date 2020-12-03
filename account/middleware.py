@@ -9,11 +9,11 @@ class OneSessionPerUserMiddleware:
             stored_session_key = request.user.logged_in_user.session_key
 
             if stored_session_key and stored_session_key != request.session.session_key:
-                Session.objects.get(session_key=stored_session_key).delete()
-
+               session_key = Session.objects.filter(session_key=stored_session_key)
+               if session_key is not None and len(session_key) > 0:
+                   session_key[0].delete()
             request.user.logged_in_user.session_key = request.session.session_key
             request.user.logged_in_user.save()
-
         response = self.get_response(request)
 
         return response
