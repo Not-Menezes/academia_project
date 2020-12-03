@@ -203,6 +203,9 @@ def update_class(request, pk):
             classes = Class.objects.filter(~Q(id=pk) & Q(user=request.user) & (Q(start_date__range=[start_date, end_date]) | Q(end_date__range=[start_date, end_date])) & (Q(start_date__lte=start_date) | Q(end_date__gte=end_date)))
             if classForm.is_valid() and len(classes) == 0:
                 classForm.save()
+                registrations = Registration.objects.filter(course=classObj)
+                if registrations is not None and len(registrations) > 0:
+                    registrations.delete()
                 return redirect('dashboard_professor')
             else:
                 messages.info(request, 'Voce já possui uma aula criada durante este horário!')
@@ -217,6 +220,9 @@ def delete_class(request, pk):
     if classObj.user != request.user:
         return redirect('dashboard_professor')
     if request.method == "POST":
+        registrations = Registration.objects.filter(course=classObj)
+        if registrations is not None and len(registrations) > 0:
+            registrations.delete()
         classObj.delete()
         return redirect('dashboard_professor')
 
